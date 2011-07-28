@@ -25,18 +25,20 @@ class Bonanza(object):
 
     def showCategories(self):
         html = self._downloadUrl(BASE_URL)
-        icon = os.path.join(ADDON.getAddonInfo('path'), 'icon.png')
 
-        item = xbmcgui.ListItem(ADDON.getLocalizedString(30001), iconImage = icon)
+        item = xbmcgui.ListItem(ADDON.getLocalizedString(30001), iconImage = ICON)
+        item.setProperty('Fanart_Image', FANART)
         xbmcplugin.addDirectoryItem(HANDLE, PATH + '?mode=search', item, True)
-        item = xbmcgui.ListItem(ADDON.getLocalizedString(30002), iconImage = icon)
+        item = xbmcgui.ListItem(ADDON.getLocalizedString(30002), iconImage = ICON)
+        item.setProperty('Fanart_Image', FANART)
         xbmcplugin.addDirectoryItem(HANDLE, PATH + '?mode=recommend', item, True)
 
         for m in re.finditer('<a href="(/Bonanza/kategori/.*\.htm)">(.*)</a>', html):
             path = m.group(1)
             title = m.group(2)
 
-            item = xbmcgui.ListItem(title, iconImage = icon)
+            item = xbmcgui.ListItem(title, iconImage = ICON)
+            item.setProperty('Fanart_Image', FANART)
             item.setInfo(type = 'video', infoLabels = {
                 'title' : title
             })
@@ -51,7 +53,7 @@ class Bonanza(object):
         html = self._downloadUrl(BASE_URL)
 
         # remove anything but 'Redaktionens favoritter'
-        html = html[html.find('<span class="tabTitle">Redaktionens favoritter</span>'):]
+        html = html[html.find('<span class="tabTitle">Redaktionens Favoritter</span>'):]
         self.addSubCategories(html)
         xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_TITLE)
         xbmcplugin.endOfDirectory(HANDLE)
@@ -61,7 +63,7 @@ class Bonanza(object):
         html = self._downloadUrl(url.replace(' ', '+'))
 
         # remove 'Redaktionens favoritter' as they are located on every page
-        html = html[:html.find('<span class="tabTitle">Redaktionens favoritter</span>')]
+        html = html[:html.find('<span class="tabTitle">Redaktionens Favoritter</span>')]
 
         self.addSubCategories(html)
         xbmcplugin.addSortMethod(HANDLE, xbmcplugin.SORT_METHOD_TITLE)
@@ -81,6 +83,7 @@ class Bonanza(object):
             description = m.group(4)
 
             item = xbmcgui.ListItem(title, iconImage = image)
+            item.setProperty('Fanart_Image', FANART)
             item.setInfo(type = 'video', infoLabels = {
                 'title' : title,
                 'plot' : description
@@ -95,22 +98,23 @@ class Bonanza(object):
             json = simplejson.loads(raw)
 
             infoLabels = {}
-            if json['Title'] is not None:
+            if json.has_key('Title') and json['Title'] is not None:
                 infoLabels['title'] = self._decodeHtmlEntities(json['Title'])
-            if json['Description'] is not None:
+            if json.has_key('Description') and json['Description'] is not None:
                 infoLabels['plot'] = self._decodeHtmlEntities(json['Description'])
-            if json['Colophon'] is not None:
+            if json.has_key('Colophon') and json['Colophon'] is not None:
                 infoLabels['writer'] = self._decodeHtmlEntities(json['Colophon'])
-            if json['Actors'] is not None:
+            if json.has_key('Actors') and json['Actors'] is not None:
                 infoLabels['cast'] = self._decodeHtmlEntities(json['Actors'])
-            if json['Rating'] is not None:
+            if json.has_key('Rating') and json['Rating'] is not None:
                 infoLabels['rating'] = json['Rating']
-            if json['FirstPublished'] is not None:
+            if json.has_key('FirstPublished') and json['FirstPublished'] is not None:
                 infoLabels['year'] = int(json['FirstPublished'][:4])
-            if json['Duration'] is not None:
+            if json.has_key('Duration') and json['Duration'] is not None:
                 infoLabels['duration'] = self._secondsToDuration(int(json['Duration']) / 1000)
 
             item = xbmcgui.ListItem(infoLabels['title'], iconImage = self.findFileLocation(json, 'Thumb'))
+            item.setProperty('Fanart_Image', FANART)
             item.setInfo('video', infoLabels)
 
             rtmp_url = self.findFileLocation(json, 'VideoHigh')
@@ -123,8 +127,6 @@ class Bonanza(object):
             m = re.match('(rtmp://.*?)/(.*)', rtmp_url)
             rtmp_url = '%s/bonanza/%s' % (m.group(1), m.group(2))
             xbmcplugin.addDirectoryItem(HANDLE, rtmp_url, item, False)
-
-
 
     def findFileLocation(self, json, type):
         for file in json['Files']:
@@ -188,6 +190,9 @@ if __name__ == '__main__':
     PATH = sys.argv[0]
     HANDLE = int(sys.argv[1])
     PARAMS = urlparse.parse_qs(sys.argv[2][1:])
+
+    ICON = os.path.join(ADDON.getAddonInfo('path'), 'icon.png')
+    FANART = os.path.join(ADDON.getAddonInfo('path'), 'fanart.jpg')
 
     b = Bonanza()
     if PARAMS.has_key('mode') and PARAMS['mode'][0] == 'subcat':
