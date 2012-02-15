@@ -262,6 +262,7 @@ if __name__ == '__main__':
     ICON = os.path.join(ADDON.getAddonInfo('path'), 'icon.png')
     FANART = os.path.join(ADDON.getAddonInfo('path'), 'fanart.jpg')
 
+    buggalo.SUBMIT_URL = 'http://tommy.winther.nu/exception/submit.php'
     b = Bonanza()
     try:
         if PARAMS.has_key('mode') and PARAMS['mode'][0] == 'subcat':
