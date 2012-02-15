@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../script.module.buggalo/lib/.idea/lib.iml" filepath="$PROJECT_DIR$/../script.module.buggalo/lib/.idea/lib.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/plugin.video.dr.dk.bonanza.iml" filepath="$PROJECT_DIR$/.idea/plugin.video.dr.dk.bonanza.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../xbmcstubs/.idea/xbmcstubs.iml" filepath="$PROJECT_DIR$/../xbmcstubs/.idea/xbmcstubs.iml" />
     </modules>
   </component>
 </project>
