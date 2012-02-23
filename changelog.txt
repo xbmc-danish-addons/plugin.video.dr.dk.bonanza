@@ -1,3 +1,6 @@
+[B]Version 2.1.1 - 2012-02-23[/B]
+- Fixed minor problems with parsing data from Bonanza
+
 [B]Version 2.1.0 - 2012-02-15[/B]
 - Introduced usage of script.module.buggalo for improved error handling
   with option for the user to submit exceptions/bugs

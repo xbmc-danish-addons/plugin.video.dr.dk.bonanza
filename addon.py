@@ -136,7 +136,6 @@ class Bonanza(object):
 
     def addContent(self, html):
         items = list()
-
         for m in re.finditer('newPlaylist\(([^"]+)"', html):
             raw = m.group(1)[:-2].replace('&quot;', '"')
             json = simplejson.loads(raw)
@@ -159,6 +158,8 @@ class Bonanza(object):
             infoLabels['studio'] = ADDON.getAddonInfo('name')
 
             thumb = self.findFileLocation(json, 'Thumb')
+            if thumb is None:
+                thumb = ICON
             item = xbmcgui.ListItem(infoLabels['title'], iconImage=thumb, thumbnailImage=thumb)
             item.setProperty('Fanart_Image', FANART)
             item.setInfo('video', infoLabels)
@@ -208,6 +209,9 @@ class Bonanza(object):
         string -- the string with HTML entities
 
         """
+        if type(string) not in [str, unicode]:
+            return string
+
         def substituteEntity(match):
             ent = match.group(3)
             if match.group(1) == "#":
