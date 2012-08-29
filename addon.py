@@ -167,7 +167,8 @@ class Bonanza(object):
     def playContent(self, url):
         if url[0:4] == 'rtmp':
             # patch videoUrl to work with xbmc
-            m = re.match('(rtmp://.*?)/(.*)', url)
+			# patch for Raspberry Pi compat. by only supporting high-quality MP4 streams.
+            m = re.match('(rtmp://.*?)/(mp4.*)', url) 
             url = '%s/bonanza/%s' % (m.group(1), m.group(2))
 
         item = xbmcgui.ListItem(path=url)
