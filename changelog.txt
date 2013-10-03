@@ -1,3 +1,8 @@
+[B]Version 3.0.1 - 2013-10-03[/B]
+- Fixed playback on Raspberry Pi
+- Use Python built-in json library (if available)
+- Fixed duration in list view
+
 [B]Version 3.0.0 - 2013-05-01[/B]
 - Initial version for Frodo
 - Added support for Bonanza Radio content

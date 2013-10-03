@@ -20,7 +20,6 @@
 import os
 import re
 import sys
-import simplejson
 import urlparse
 import urllib2
 from htmlentitydefs import name2codepoint
@@ -30,6 +29,11 @@ import xbmc
 import xbmcgui
 import xbmcplugin
 import xbmcaddon
+
+try:
+    import json
+except:
+    import simplejson as json
 
 BASE_URL = 'http://www.dr.dk/Bonanza/'
 VIDEO_TYPES = ['VideoHigh', 'VideoMid', 'VideoLow', 'Audio']
@@ -144,26 +148,26 @@ class Bonanza(object):
         items = list()
         for m in re.finditer('newPlaylist\(([^"]+)"', html):
             raw = m.group(1)[:-2].replace('&quot;', '"')
-            json = simplejson.loads(raw)
+            content = json.loads(raw)
 
             infoLabels = {}
-            if 'Title' in json and json['Title'] is not None:
-                infoLabels['title'] = self._decodeHtmlEntities(json['Title'])
-            if 'Description' in json and json['Description'] is not None:
-                infoLabels['plot'] = self._decodeHtmlEntities(json['Description'])
-            if 'Colophon' in json and json['Colophon'] is not None:
-                infoLabels['writer'] = self._decodeHtmlEntities(json['Colophon'])
-            if 'Actors' in json and json['Actors'] is not None:
-                infoLabels['cast'] = self._decodeHtmlEntities(json['Actors'])
-            if 'Rating' in json and json['Rating'] is not None:
-                infoLabels['rating'] = json['Rating']
-            if 'FirstPublished' in json and json['FirstPublished'] is not None:
-                infoLabels['year'] = int(json['FirstPublished'][:4])
-            if 'Duration' in json and json['Duration'] is not None:
-                infoLabels['duration'] = self._secondsToDuration(int(json['Duration']) / 1000)
+            if 'Title' in content and content['Title'] is not None:
+                infoLabels['title'] = self._decodeHtmlEntities(content['Title'])
+            if 'Description' in content and content['Description'] is not None:
+                infoLabels['plot'] = self._decodeHtmlEntities(content['Description'])
+            if 'Colophon' in content and content['Colophon'] is not None:
+                infoLabels['writer'] = self._decodeHtmlEntities(content['Colophon'])
+            if 'Actors' in content and content['Actors'] is not None:
+                infoLabels['cast'] = self._decodeHtmlEntities(content['Actors'])
+            if 'Rating' in content and content['Rating'] is not None:
+                infoLabels['rating'] = content['Rating']
+            if 'FirstPublished' in content and content['FirstPublished'] is not None:
+                infoLabels['year'] = int(content['FirstPublished'][:4])
+            if 'Duration' in content and content['Duration'] is not None:
+                infoLabels['duration'] = int(content['Duration']) / 60000
             infoLabels['studio'] = ADDON.getAddonInfo('name')
 
-            thumb = self.findFileLocation(json, 'Thumb')
+            thumb = self.findFileLocation(content, 'Thumb')
             if thumb is None:
                 thumb = ICON
             item = xbmcgui.ListItem(infoLabels['title'], iconImage=thumb, thumbnailImage=thumb)
@@ -172,7 +176,7 @@ class Bonanza(object):
             item.setInfo('video', infoLabels)
 
             url = '?mode=play'
-            for elem in json['Files']:
+            for elem in content['Files']:
                 if elem['Type'] in VIDEO_TYPES:
                     url += '&' + elem['Type'] + '=' + elem['Location']
 
@@ -199,14 +203,19 @@ class Bonanza(object):
             xbmcplugin.setResolvedUrl(HANDLE, False, xbmcgui.ListItem())
 
     def fixRtmpUrl(self, url):
-        if url[0:4] == 'rtmp':
-            # patch videoUrl to work with xbmc
-            m = re.match('(rtmp://.*?)/(.*)', url)
-            url = '%s/bonanza/%s' % (m.group(1), m.group(2))
+        if url[0:7] == 'rtmp://':
+            m = re.search('(rtmp://.*?/(.*?))/(.*)', url)
+            if m:
+                url = m.group(1) + ' playpath=' + m.group(3) + ' app=' + m.group(2)
+            try:
+                print url
+            except:
+                pass
+
         return url
 
-    def findFileLocation(self, json, fileType):
-        for elem in json['Files']:
+    def findFileLocation(self, data, fileType):
+        for elem in data['Files']:
             if elem['Type'] == fileType:
                 return elem['Location']
         return None
@@ -253,19 +262,6 @@ class Bonanza(object):
 
         entity_re = re.compile(r'&(#?)(x?)(\w+);')
         return entity_re.subn(substituteEntity, string)[0]
-
-    def _secondsToDuration(self, timestamp):
-        """Formats the seconds to a duration string as used by XBMC.
-    
-        Keyword arguments:
-        input -- the duration in seconds
-    
-        """
-        hours = timestamp / 3600
-        minutes = (timestamp % 3600) / 60
-        seconds = (timestamp % 3600) % 60
-
-        return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
     def _getTab(self, html, tabLabel):
         m = re.search('(<div id="tabWrapper" class="tabWrapper"><span class="tabTitle">' + tabLabel + '.*?</div>)',
