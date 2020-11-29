@@ -1,6 +1,7 @@
 #
-#      Copyright (C) 2014 Tommy Winther
-#      http://tommy.winther.nu
+#      Copyright (C) 2014 Tommy Winther, msj33
+#
+#  https://github.com/xbmc-danish-addons/plugin.video.drnu#
 #
 #  This Program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -21,7 +22,8 @@ import os
 import re
 import sys
 import urlparse
-import urllib2
+import requests
+import requests_cache
 from htmlentitydefs import name2codepoint
 import buggalo
 
@@ -57,8 +59,8 @@ class Bonanza(object):
             for m in re.finditer(pattern, html, re.DOTALL):
                 url = BASE_URL + m.group(1)
                 image = 'http:' + m.group(2)
-                title = self._decodeHtmlEntities(m.group(3).decode('utf-8'))
-                description = self._decodeHtmlEntities(m.group(4).decode('utf-8'))
+                title = self._decodeHtmlEntities(m.group(3))
+                description = self._decodeHtmlEntities(m.group(4))
 
                 infoLabels = {
                     'title': title,
@@ -120,8 +122,8 @@ class Bonanza(object):
         for m in re.finditer(pattern, html, re.DOTALL):
             url = BASE_URL + m.group(1)
             image = 'http:' + m.group(2)
-            title = self._decodeHtmlEntities(m.group(3).decode('utf-8'))
-            description = self._decodeHtmlEntities(m.group(4).decode('utf-8'))
+            title = self._decodeHtmlEntities(m.group(3))
+            description = self._decodeHtmlEntities(m.group(4))
 
             item = xbmcgui.ListItem(title, iconImage=image)
             item.setProperty('Fanart_Image', FANART)
@@ -140,9 +142,9 @@ class Bonanza(object):
         html = html.split('<div class="list-footer"></div>',1)[0]
         for m in re.finditer(pattern, html, re.DOTALL):
             url = BASE_URL + m.group(1)
-            description = self._decodeHtmlEntities(m.group(2).decode('utf-8'))
+            description = self._decodeHtmlEntities(m.group(2))
             image = 'http:' + m.group(3)
-            title = self._decodeHtmlEntities(m.group(4).decode('utf-8'))
+            title = self._decodeHtmlEntities(m.group(4))
 
             infoLabels = {
                 'title': title,
@@ -172,11 +174,12 @@ class Bonanza(object):
     def _downloadUrl(self, url):
         try:
             xbmc.log(url)
-            u = urllib2.urlopen(url)
-            data = u.read()
-            u.close()
-            return data
-        except Exception, ex:
+            u = requests.get(url)
+            if u.status_code == 200:
+                data = u.text
+                u.close()
+                return data
+        except Exception as ex:
             raise BonanzaException(ex)
 
     def _decodeHtmlEntities(self, string):
@@ -229,6 +232,10 @@ if __name__ == '__main__':
     ICON = os.path.join(ADDON.getAddonInfo('path'), 'icon.png')
     FANART = os.path.join(ADDON.getAddonInfo('path'), 'fanart.jpg')
 
+    CACHE_FILE = os.path.join(ADDON.getAddonInfo('path'), 'requests_cache')
+    #cache expires after: 86400=1 day   604800=7 days
+    requests_cache.install_cache(CACHE_FILE, backend='sqlite', expire_after=604800 )
+
     buggalo.SUBMIT_URL = 'http://tommy.winther.nu/exception/submit.php'
     b = Bonanza()
     try:
@@ -244,7 +251,7 @@ if __name__ == '__main__':
         else:
             b.showCategories()
 
-    except BonanzaException, ex:
+    except BonanzaException as ex:
         b.showError(str(ex))
 
     except Exception:
