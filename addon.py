@@ -51,7 +51,7 @@ class Bonanza(object):
 
             items = list()
             pattern = '<a href="/bonanza/(serie/.*?)".*?' \
-                      '<img src="(//asset\.dr\.dk/[^"]+)".*?' \
+                      'data-src="(//asset\.dr\.dk/[^"]+)".*?' \
                       '<h3.*?>([^<]+)</h3>.*?<p>([^<]+)</p>'
 
             for m in re.finditer(pattern, html, re.DOTALL):
@@ -115,7 +115,7 @@ class Bonanza(object):
 
     def addSubCategories(self, html):
         pattern = '<a href="/bonanza/(serie/.*?)".*?' \
-                  '<img src="(//asset\.dr\.dk/[^"]+)".*?' \
+                  'data-src="(//asset\.dr\.dk/[^"]+)".*?' \
                   '<h3>([^<]+)</h3>.*?<p>([^<]+)</p>'
         for m in re.finditer(pattern, html, re.DOTALL):
             url = BASE_URL + m.group(1)
@@ -134,10 +134,10 @@ class Bonanza(object):
 
     def addContent(self, html):
         items = list()
-        pattern = '<a href="/bonanza/(serie/.*?)" title="([^"]+)".*?' \
-                  '<img src="(//asset\.dr\.dk/[^"]+)".*?' \
+        pattern = '<a href="/bonanza/(serie/.*?)".*?title="([^"]+)".*?' \
+                  'data-src="(//asset\.dr\.dk/[^"]+)".*?' \
                   '<h3>([^<]+)</h3>'
-
+        html = html.split('<div class="list-footer"></div>',1)[0]
         for m in re.finditer(pattern, html, re.DOTALL):
             url = BASE_URL + m.group(1)
             description = self._decodeHtmlEntities(m.group(2).decode('utf-8'))
