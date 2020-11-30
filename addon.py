@@ -1,5 +1,6 @@
 #
-#      Copyright (C) 2014 Tommy Winther, msj33
+#      Copyright (C) 2014 Tommy Winther, termehansen
+
 #
 #  https://github.com/xbmc-danish-addons/plugin.video.drnu#
 #
@@ -52,7 +53,7 @@ class Bonanza(object):
             html = self._downloadUrl('http://www.dr.dk/bonanza/sog?q=' + keyboard.getText().replace(' ', '+'))
 
             items = list()
-            pattern = '<a href="/bonanza/(serie/.*?)".*?' \
+            pattern = '<a.*?href="/bonanza/(serie/.*?)".*?' \
                       'data-src="(//asset\.dr\.dk/[^"]+)".*?' \
                       '<h3.*?>([^<]+)</h3>.*?<p>([^<]+)</p>'
 
