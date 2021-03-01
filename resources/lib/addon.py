@@ -22,10 +22,9 @@
 import os
 import re
 import sys
-import urlparse
 import requests
 import requests_cache
-from htmlentitydefs import name2codepoint
+from html import unescape
 import buggalo
 
 import xbmc
@@ -33,6 +32,12 @@ import xbmcgui
 import xbmcplugin
 import xbmcaddon
 import json
+
+try:
+    # python 2
+    from urlparse import parse_qsl
+except:
+    from urllib.parse import parse_qsl
 
 BASE_URL = 'http://www.dr.dk/bonanza/'
 tr = xbmcaddon.Addon().getLocalizedString
@@ -43,7 +48,7 @@ FANART = os.path.join(addon_path, 'resources', 'fanart.jpg')
 CACHE = os.path.join(addon_path, 'requests_cache')
 
 def make_notice(object):
-    xbmc.log(str(object), xbmc.LOGNOTICE )
+    xbmc.log(str(object), xbmc.LOGINFO )
 
 class BonanzaException(Exception):
     pass
@@ -73,8 +78,8 @@ class Bonanza(object):
             for m in re.finditer(pattern, html, re.DOTALL):
                 url = BASE_URL + m.group(1)
                 image = 'http:' + m.group(2)
-                title = self._decodeHtmlEntities(m.group(3))
-                description = self._decodeHtmlEntities(m.group(4))
+                title = unescape(m.group(3))
+                description = unescape(m.group(4))
 
                 infoLabels = {
                     'title': title,
@@ -136,8 +141,8 @@ class Bonanza(object):
         for m in re.finditer(pattern, html, re.DOTALL):
             url = BASE_URL + m.group(1)
             image = 'http:' + m.group(2)
-            title = self._decodeHtmlEntities(m.group(3))
-            description = self._decodeHtmlEntities(m.group(4))
+            title = unescape(m.group(3))
+            description = unescape(m.group(4))
 
             item = xbmcgui.ListItem(title)
             item.setArt({'fanart': FANART, 'icon': image})
@@ -156,10 +161,9 @@ class Bonanza(object):
         html = html.split('<div class="list-footer"></div>',1)[0]
         for m in re.finditer(pattern, html, re.DOTALL):
             url = BASE_URL + m.group(1)
-            description = self._decodeHtmlEntities(m.group(2))
+            description = unescape(m.group(2))
             image = 'http:' + m.group(3)
-            title = self._decodeHtmlEntities(m.group(4))
-
+            title = unescape(m.group(4))
             infoLabels = {
                 'title': title,
                 'plot': description,
@@ -196,40 +200,6 @@ class Bonanza(object):
         except Exception as ex:
             raise BonanzaException(ex)
 
-    def _decodeHtmlEntities(self, string):
-        """Decodes the HTML entities found in the string and returns the modified string.
-
-        Both decimal (&#000;) and hexadecimal (&x00;) are supported as well as HTML entities,
-        such as &aelig;
-
-        Keyword arguments:
-        string -- the string with HTML entities
-
-        """
-        if type(string) not in [str, unicode]:
-            return string
-
-        def substituteEntity(match):
-            ent = match.group(3)
-            if match.group(1) == "#":
-                # decoding by number
-                if match.group(2) == '':
-                    # number is in decimal
-                    return unichr(int(ent))
-            elif match.group(2) == 'x':
-                # number is in hex
-                return unichr(int('0x' + ent, 16))
-            else:
-                # they were using a name
-                cp = name2codepoint.get(ent)
-                if cp:
-                    return unichr(cp)
-                else:
-                    return match.group()
-
-        entity_re = re.compile(r'&(#?)(x?)(\w+);')
-        return entity_re.subn(substituteEntity, string)[0]
-
     def showError(self, message):
         heading = buggalo.getRandomHeading()
         line1 = tr(30900)
@@ -238,7 +208,7 @@ class Bonanza(object):
 
     def route(self, query):
         try:
-            PARAMS = dict(urlparse.parse_qsl(query[1:]))
+            PARAMS = dict(parse_qsl(query[1:]))
             if 'mode' in PARAMS:
                 if PARAMS['mode'] == 'subcat':
                     self.showSubCategories(PARAMS['url'])
@@ -256,37 +226,3 @@ class Bonanza(object):
 
         except Exception:
             buggalo.onExceptionRaised()
-
-if __name__ == '__main__':
-    ADDON = xbmcaddon.Addon()
-    PATH = sys.argv[0]
-    HANDLE = int(sys.argv[1])
-    PARAMS = urlparse.parse_qs(sys.argv[2][1:])
-
-    ICON = os.path.join(ADDON.getAddonInfo('path'), 'icon.png')
-    FANART = os.path.join(ADDON.getAddonInfo('path'), 'fanart.jpg')
-
-    CACHE_FILE = os.path.join(ADDON.getAddonInfo('path'), 'requests_cache')
-    #cache expires after: 86400=1 day   604800=7 days
-    requests_cache.install_cache(CACHE_FILE, backend='sqlite', expire_after=604800 )
-
-    buggalo.SUBMIT_URL = 'http://tommy.winther.nu/exception/submit.php'
-    b = Bonanza()
-    try:
-        if 'mode' in PARAMS:
-            if PARAMS['mode'][0] == 'subcat':
-                b.showSubCategories(PARAMS['url'][0])
-            elif PARAMS['mode'][0] == 'content':
-                b.showContent(PARAMS['url'][0])
-            elif PARAMS['mode'][0] == 'search':
-                b.search()
-            elif PARAMS['mode'][0] == 'play':
-                b.playContent(PARAMS['url'][0])
-        else:
-            b.showCategories()
-
-    except BonanzaException as ex:
-        b.showError(str(ex))
-
-    except Exception:
-        buggalo.onExceptionRaised()
