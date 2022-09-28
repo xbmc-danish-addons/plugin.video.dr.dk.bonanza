@@ -32,8 +32,7 @@ import xbmc
 import xbmcgui
 import xbmcplugin
 import xbmcaddon
-import html.parser
-parser = html.parser.HTMLParser()
+from html import unescape
 
 
 BASE_URL = 'http://www.dr.dk/bonanza/'
@@ -100,8 +99,8 @@ class Bonanza(object):
             for m in re.finditer(pattern, html, re.DOTALL):
                 url = BASE_URL + m.group(1)
                 image = 'http:' + m.group(2)
-                title = parser.unescape(m.group(3))
-                description = parser.unescape(m.group(4))
+                title = unescape(m.group(3))
+                description = unescape(m.group(4))
 
                 infoLabels = {
                     'title': title,
@@ -163,8 +162,8 @@ class Bonanza(object):
         for m in re.finditer(pattern, html, re.DOTALL):
             url = BASE_URL + m.group(1)
             image = 'http:' + m.group(2)
-            title = parser.unescape(m.group(3))
-            description = parser.unescape(m.group(4))
+            title = unescape(m.group(3))
+            description = unescape(m.group(4))
 
             item = xbmcgui.ListItem(title, offscreen=True)
             item.setArt({'fanart': FANART, 'icon': image})
@@ -183,9 +182,9 @@ class Bonanza(object):
         html = html.split('<div class="list-footer"></div>', 1)[0]
         for m in re.finditer(pattern, html, re.DOTALL):
             url = BASE_URL + m.group(1)
-            description = parser.unescape(m.group(2))
+            description = unescape(m.group(2))
             image = 'http:' + m.group(3)
-            title = parser.unescape(m.group(4))
+            title = unescape(m.group(4))
             infoLabels = {
                 'title': title,
                 'plot': description,
