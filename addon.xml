@@ -27,9 +27,10 @@
             <icon>resources/icon.png</icon>
             <fanart>resources/fanart.jpg</fanart>
        </assets>
-       <news>[B]Version 3.2.2 - 2022-09-26[/B]
+       <news>[B]Version 3.2.2 - 2023-05-01[/B]
 - use inputstream adaptive
 - re-factor for python3 only
+- change for new settings api
     </news>
        <news>[B]Version 3.2.1 - 2020-03-06[/B]
 - Updated addon to match website changes

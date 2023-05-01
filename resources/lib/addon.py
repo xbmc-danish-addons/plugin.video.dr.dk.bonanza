@@ -205,7 +205,7 @@ class Bonanza(object):
         m = re.search(pattern, html, re.DOTALL)
         if m is not None:
             item = xbmcgui.ListItem(path=m.group(1))
-            if get_setting('inputstream') == 'adaptive' and '.mp3' not in m.group(1):
+            if int(get_setting('inputstream')) == 0 and '.mp3' not in m.group(1):
                 is_helper = Helper('hls')
                 if is_helper.check_inputstream():
                     item.setProperty('inputstream', is_helper.inputstream_addon)
