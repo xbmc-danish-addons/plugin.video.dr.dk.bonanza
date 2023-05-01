@@ -1,7 +1,7 @@
 [B]Version 3.2.2 - 2023-05-01[/B]
 - use inputstream adaptive
 - re-factor for python3 only
-- change for new sittings api
+- change for new settings api
 
 [B]Version 3.2.0 - 2020-11-26[/B]
 - Updated addon to match website changes
